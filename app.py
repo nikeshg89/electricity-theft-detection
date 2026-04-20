@@ -104,16 +104,16 @@ html, body, [class*="css"] {
 def init_session_state():
         if "data_loaded" not in st.session_state:
                     st.session_state.data_loaded = False
-                if "current_client" not in st.session_state:
-                            st.session_state.current_client = None
-                        if "model_type" not in st.session_state:
-                                    st.session_state.model_type = "isolation_forest"
-                                if "readings" not in st.session_state:
-                                            # Default: some realistic values
-                                            st.session_state.readings = [
-                                                            1.2, 1.0, 0.9, 0.8, 0.8, 1.0, 1.8, 3.2, 3.5, 3.0, 2.8, 2.9,
-                                                            3.0, 2.9, 2.8, 3.1, 3.8, 4.5, 4.8, 4.5, 3.9, 3.1, 2.2, 1.5
-                                            ]
+        if "current_client" not in st.session_state:
+                st.session_state.current_client = None
+        if         "model_type" not in st.session_state:
+                    st.session_state.model_type = "isolation_forest"
+        if "readings" not in st.session_state:
+                    # Default: some realistic values
+                    st.session_state.readings = [
+                                    1.2, 1.0, 0.9, 0.8, 0.8, 1.0, 1.8, 3.2, 3.5, 3.0, 2.8, 2.9,
+                                    3.0, 2.9, 2.8, 3.1, 3.8, 4.5, 4.8, 4.5, 3.9, 3.1, 2.2, 1.5
+                    ]
 
 def load_system_data():
         """Load the processed dataset and models."""
@@ -138,6 +138,7 @@ except Exception as e:
 def run_prediction():
         """Execute prediction based on current session readings."""
     try:
+            
                 res = predict_single(st.session_state.readings, st.session_state.model_type)
                 return res
 except Exception as e:
@@ -259,6 +260,7 @@ else:
                 st.markdown("<p style='font-size:0.8rem; color:#64748b;'>Manually adjust hourly consumption (kWh)</p>", unsafe_allow_html=True)
 
         with st.expander("Expand Hourly Editor", expanded=True):
+                
                         new_readings = []
                         for h in range(24):
                                             val = st.number_input(f"{h:02d}:00", value=float(st.session_state.readings[h]), step=0.1, format="%.1f", key=f"h_input_{h}")
