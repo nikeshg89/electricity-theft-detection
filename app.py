@@ -2,7 +2,7 @@
 """
 app.py
 ======
-Smart Electricity Theft Detection System — Professional Dashboard Redesign
+Smart Electricity Theft Detection System - Professional Dashboard Redesign
 """
 
 import os
@@ -14,32 +14,18 @@ import plotly.graph_objects as go
 import plotly.express as px
 import streamlit as st
 
-# ── Path setup ─────────────────────────────────────────────────────────────────
-APP_DIR  = os.path.dirname(os.path.abspath(__file__))
-SRC_DIR  = os.path.join(APP_DIR, "src")
-sys.path.insert(0, SRC_DIR)
-
+import paths
 from predict import predict_single, load_models
 
-BASE_DIR      = APP_DIR
-MODEL_DIR     = os.path.join(BASE_DIR, "model")
-SCREENSHOTS   = os.path.join(BASE_DIR, "screenshots")
-DATASET_DIR   = os.path.join(BASE_DIR, "dataset")
-FEAT_CSV      = os.path.join(DATASET_DIR, "features.csv")
-
-os.makedirs(MODEL_DIR, exist_ok=True)
-os.makedirs(SCREENSHOTS, exist_ok=True)
-os.makedirs(DATASET_DIR, exist_ok=True)
-
-# ── Page config ────────────────────────────────────────────────────────────────
+# -- Page config ----------------------------------------------------------------
 st.set_page_config(
-    page_title="Smart Electricity Theft Detection",
-    page_icon="⚡",
-    layout="wide",
-    initial_sidebar_state="expanded",
+        page_title="Smart Electricity Theft Detection",
+        page_icon="V",
+        layout="wide",
+        initial_sidebar_state="expanded",
 )
 
-# ── Professional UI Theme (Custom CSS) ─────────────────────────────────────────
+# -- Professional UI Theme (Custom CSS) -----------------------------------------
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
@@ -47,424 +33,319 @@ st.markdown("""
 /* Main Defaults */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
-}
+    }
 
-h1, h2, h3, .stHeader {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 700 !important;
-}
+    h1, h2, h3, .stHeader {
+        font-family: 'Poppins', sans-serif;
+            font-weight: 700 !important;
+            }
 
-/* Background */
-.stApp {
-    background-color: #f8fafc;
-}
+            /* Background */
+            .stApp {
+                background-color: #f8fafc;
+                }
 
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background-color: #ffffff;
-    border-right: 1px solid #e2e8f0;
-}
+                /* Sidebar */
+                [data-testid="stSidebar"] {
+                    background-color: #ffffff;
+                        border-right: 1px solid #e2e8f0;
+                        }
 
-/* Custom Cards */
-.ui-card {
-    background: white;
-    padding: 24px;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-}
+                        /* Custom Cards */
+                        .ui-card {
+                            background: white;
+                                padding: 24px;
+                                    border-radius: 16px;
+                                        border: 1px solid #e2e8f0;
+                                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+                                                margin-bottom: 20px;
+                                                }
 
-/* Hero Section */
-.hero-container {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    padding: 3rem 2rem;
-    border-radius: 20px;
-    color: white;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
-    position: relative;
-    overflow: hidden;
-}
+                                                /* Sidebar Buttons */
+                                                .stButton>button {
+                                                    width: 100%;
+                                                        border-radius: 8px;
+                                                            height: 3em;
+                                                                background-color: #ffffff;
+                                                                    color: #1e293b;
+                                                                        border: 1px solid #e2e8f0;
+                                                                            font-weight: 600;
+                                                                            }
 
-.hero-container::after {
-    content: "⚡";
-    position: absolute;
-    right: -20px;
-    bottom: -20px;
-    font-size: 15rem;
-    opacity: 0.1;
-}
+                                                                            .stButton>button:hover {
+                                                                                border-color: #3b82f6;
+                                                                                    color: #3b82f6;
+                                                                                    }
 
-.hero-title {
-    font-size: 2.8rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em;
-}
+                                                                                    /* Metric Colors */
+                                                                                    [data-testid="stMetricValue"] {
+                                                                                        font-size: 1.8rem !important;
+                                                                                            font-weight: 800 !important;
+                                                                                            }
 
-.hero-subtitle {
-    font-size: 1.1rem;
-    font-weight: 400;
-    opacity: 0.9;
-}
-
-/* Metric Cards */
-.metric-container {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 16px;
-    border-bottom: 4px solid #2563eb;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.metric-val {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-}
-
-.metric-lbl {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-/* Result Cards */
-.res-card {
-    padding: 40px;
-    border-radius: 24px;
-    text-align: center;
-    color: white;
-    margin: 20px auto;
-    max-width: 800px;
-    animation: fadeIn 0.5s ease-out;
-}
-
-.res-normal {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
-}
-
-.res-unusual {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
-}
-
-.res-suspicious {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
-}
-
-.res-title {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 10px;
-}
-
-.res-desc {
-    font-size: 1.1rem;
-    opacity: 0.9;
-}
-
-.res-score {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 8px 20px;
-    border-radius: 99px;
-    font-weight: 700;
-    margin-top: 20px;
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Buttons */
-.stButton>button {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    color: white !important;
-    border: none;
-    padding: 10px 24px;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: all 0.2s;
-    width: 100%;
-}
-
-.stButton>button:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-/* Sliders */
-.stSlider [data-baseweb="slider"] {
-    margin-top: 10px;
-}
-
-</style>
-""", unsafe_allow_html=True)
+                                                                                            /* Header indicator */
+                                                                                            .main .block-container::before {
+                                                                                                content: "Professional Grid Analysis";
+                                                                                                    position: absolute;
+                                                                                                        top: -40px;
+                                                                                                            left: 0;
+                                                                                                                font-size: 0.8rem;
+                                                                                                                    font-weight: 600;
+                                                                                                                        text-transform: uppercase;
+                                                                                                                            letter-spacing: 0.1em;
+                                                                                                                                color: #64748b;
+                                                                                                                                }
+                                                                                                                                </style>
+                                                                                                                                """, unsafe_allow_html=True)
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
+# -- State management & Helpers -------------------------------------------------
 
-@st.cache_data(show_spinner=False)
-def load_features_sample(n: int = 5000) -> pd.DataFrame | None:
-    if not os.path.exists(FEAT_CSV):
-        return None
+def init_session_state():
+        if "data_loaded" not in st.session_state:
+                    st.session_state.data_loaded = False
+                if "current_client" not in st.session_state:
+                            st.session_state.current_client = None
+                        if "model_type" not in st.session_state:
+                                    st.session_state.model_type = "isolation_forest"
+                                if "readings" not in st.session_state:
+                                            # Default: some realistic values
+                                            st.session_state.readings = [
+                                                            1.2, 1.0, 0.9, 0.8, 0.8, 1.0, 1.8, 3.2, 3.5, 3.0, 2.8, 2.9,
+                                                            3.0, 2.9, 2.8, 3.1, 3.8, 4.5, 4.8, 4.5, 3.9, 3.1, 2.2, 1.5
+                                            ]
+
+def load_system_data():
+        """Load the processed dataset and models."""
     try:
-        df = pd.read_csv(FEAT_CSV, parse_dates=["datetime"], nrows=n)
-        return df
-    except:
+                # Ensure directories exist
+                paths.MODEL_DIR.mkdir(parents=True, exist_ok=True)
+                paths.SCREENSHOTS.mkdir(parents=True, exist_ok=True)
+
+        # Load models (this will raise FileNotFoundError if missing)
+                load_models()
+
+        # Load processed data if available
+        if paths.PROC_CSV.exists():
+                        df = pd.read_csv(paths.PROC_CSV, index_col=0, parse_dates=True)
+                        st.session_state.data_loaded = True
+                        return df
+                    return None
+except Exception as e:
+        st.error(f"System initialization error: {e}")
+        return None
+
+def run_prediction():
+        """Execute prediction based on current session readings."""
+    try:
+                res = predict_single(st.session_state.readings, st.session_state.model_type)
+                return res
+except Exception as e:
+        st.error(f"Prediction failed: {e}")
         return None
 
 
-def ensure_models_exist():
-    try:
-        load_models()
-    except:
-        with st.status("Initializing AI System...", expanded=True) as status:
-            st.write("Generating synthetic energy patterns...")
-            import fallback
-            fallback.generate_fallback_data()
-            st.write("Calibrating detection thresholds...")
-            import train
-            train.run_training()
-            st.cache_resource.clear()
-            status.update(label="System Ready", state="complete", expanded=False)
+# -- Main Layout ----------------------------------------------------------------
+
+def main():
+        init_session_state()
+    df_raw = load_system_data()
+
+    # Sidebar Header
+    with st.sidebar:
+                st.markdown("<h1 style='margin-bottom:0;'>Grid Guardian</h1>", unsafe_allow_html=True)
+                st.markdown("<p style='color:#64748b; font-weight:500; margin-bottom:2rem;'>Model-Driven Anomaly Detection</p>", unsafe_allow_html=True)
+
+        st.markdown("### Analysis Configuration")
+        model_choice = st.selectbox(
+                        "Detection Model",
+                        ["isolation_forest", "random_forest"],
+                        index=0 if st.session_state.model_type == "isolation_forest" else 1,
+                        help="Choose the algorithm for anomaly scoring."
+        )
+        st.session_state.model_type = model_choice
+
+        st.markdown("---")
+        st.markdown("### Profile Presets")
+        col1, col2 = st.columns(2)
+
+        if col1.button("Residential", help="Standard household profile"):
+                        st.session_state.readings = [0.5,0.4,0.3,0.3,0.4,0.6,1.2,2.0,1.8,1.5,1.4,1.6,1.8,1.7,1.6,1.8,2.5,3.5,3.8,3.2,2.5,1.8,1.2,0.7]
+                        st.rerun()
+
+        if col2.button("Industrial", help="High-load heavy industrial"):
+                        st.session_state.readings = [6.5,6.3,6.1,6.0,6.2,6.8,7.2,8.0,9.0,9.5,9.8,9.6,9.3,9.2,9.4,9.1,8.8,8.2,7.5,7.0,6.9,6.7,6.5,6.4]
+                        st.rerun()
+
+        if st.button("Reset", help="Restore default values"):
+                        st.session_state.readings = [3.0]*24
+                        st.rerun()
+
+            st.markdown("---")
+        st.markdown("### System Status")
+        if st.session_state.data_loaded:
+                        st.success("Historical Engine: ONLINE")
+else:
+            st.warning("Historical Engine: FALLBACK")
+
+        st.info(f"Active Model: {st.session_state.model_type.replace('_',' ').title()}")
+
+    # -- Main Dashboard Area ----------------------------------------------------
+
+    st.markdown("<h1 style='text-align: center; margin-bottom: 2rem;'>PowerGrid Intelligence Dashboard</h1>", unsafe_allow_html=True)
+
+    # Top Row: Metrics & Key Findings
+    m_col1, m_col2, m_col3 = st.columns(3)
+
+    with m_col1:
+                st.markdown("<div class='ui-card'>", unsafe_allow_html=True)
+                st.metric("Total daily load", f"{sum(st.session_state.readings):.1f} kWh", "+2.4%")
+                st.markdown("</div>", unsafe_allow_html=True)
+
+    with m_col2:
+                st.markdown("<div class='ui-card'>", unsafe_allow_html=True)
+                peak_val = max(st.session_state.readings)
+                peak_hour = st.session_state.readings.index(peak_val)
+                st.metric("Peak Demand", f"{peak_val:.1f} kWh", f"at {peak_hour:02d}:00")
+                st.markdown("</div>", unsafe_allow_html=True)
+
+    with m_col3:
+                st.markdown("<div class='ui-card'>", unsafe_allow_html=True)
+                # Run prediction
+                prediction = run_prediction()
+        if prediction:
+                        label = prediction['label']
+                        code = prediction['code']
+                        color = "#ef4444" if code == 1 else ("#f59e0b" if code == 2 else "#10b981")
+                        st.markdown(f"<p style='color:#64748b; font-size:0.8rem; font-weight:600; margin-bottom:0;'>SECURITY SCAN RESULT</p>", unsafe_allow_html=True)
+                        st.markdown(f"<h2 style='color:{color}; margin-top:0;'>{label}</h2>", unsafe_allow_html=True)
+                    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Second Row: Graph & Controls
+    st.markdown("### Profile Analysis: 24-Hour Consumer Profile")
+
+    g_col1, g_col2 = st.columns([3, 1])
+
+    with g_col1:
+                st.markdown("<div class='ui-card'>", unsafe_allow_html=True)
+
+        # Hourly labels for the chart
+                h_labels = prediction['hour_labels'] if prediction else ["Normal"]*24
+        h_colors = ["#ef4444" if l=="Suspicious" else ("#f59e0b" if l=="Slightly Unusual" else "#3b82f6") for l in h_labels]
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+                        x=[f"{h:02d}:00" for h in range(24)],
+                        y=st.session_state.readings,
+                        marker_color=h_colors,
+                        name="Consumption",
+                        hovertemplate="Hour: %{x}<br>Usage: %{y:.2f} kWh<extra></extra>"
+        ))
+        fig.update_layout(
+                        margin=dict(l=0, r=0, t=20, b=0),
+                        height=400,
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        xaxis=dict(gridcolor="#f1f5f9", tickfont=dict(color="#64748b")),
+                        yaxis=dict(gridcolor="#f1f5f9", title="Usage (kWh)", tickfont=dict(color="#64748b")),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("Bar colors represent individual hourly anomaly scores (Blue=Normal, Yellow=Unusual, Red=Suspicious)")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with g_col2:
+                st.markdown("<div class='ui-card' style='height: 485px;'>", unsafe_allow_html=True)
+                st.markdown("#### House Profile Adjuster")
+                st.markdown("<p style='font-size:0.8rem; color:#64748b;'>Manually adjust hourly consumption (kWh)</p>", unsafe_allow_html=True)
+
+        with st.expander("Expand Hourly Editor", expanded=True):
+                        new_readings = []
+                        for h in range(24):
+                                            val = st.number_input(f"{h:02d}:00", value=float(st.session_state.readings[h]), step=0.1, format="%.1f", key=f"h_input_{h}")
+                                            new_readings.append(val)
+
+                        if new_readings != st.session_state.readings:
+                                            st.session_state.readings = new_readings
+                                            st.rerun()
+                                    st.markdown("</div>", unsafe_allow_html=True)
 
 
-@st.cache_resource(show_spinner=False)
-def get_models():
-    try:
-        return load_models()
-    except:
-        return None
+    # Third Row: Historical Discovery
+    st.markdown("### Enterprise Historical Discovery")
 
-def models_ready() -> bool:
-    return get_models() is not None
+    if not st.session_state.data_loaded:
+                st.info("TIP: Connect a historical dataset to enable deep-dive analysis of individual client behaviors.")
+        # Offer to generate fallback data in UI
+        if st.button("Generate Intelligence Fallback"):
+                        with st.spinner("Generating synthetic profiles..."):
+                                            from fallback import generate_fallback_data
+                                            generate_fallback_data()
+                                            st.success("Synthetic logic activated. Rerunning...")
+                                            time.sleep(1)
+                                            st.rerun()
+else:
+        # Data discovery interface
+            st.markdown("<div class='ui-card'>", unsafe_allow_html=True)
+        h_col1, h_col2 = st.columns([1, 2])
 
-# Init check
-ensure_models_exist()
+        with h_col1:
+                        st.subheader("Client Registry")
+            all_clients = df_raw.columns.tolist() if df_raw is not None else []
+            search = st.text_input("Filter IDs", placeholder="e.g. MT_005")
+            filtered = [c for c in all_clients if search.upper() in c.upper()] if search else all_clients[:20]
 
+            client_id = st.selectbox("Select Target ID", filtered)
+            st.session_state.current_client = client_id
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("""
-    <div style="text-align:center; padding-bottom: 20px;">
-        <span style="font-size: 3.5rem;">⚡</span>
-        <h2 style="margin: 0; color: #1e293b;">VoltGuard AI</h2>
-        <p style="color: #64748b; font-size: 0.9rem;">Modern Theft Analytics</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
+            if df_raw is not None and client_id:
+                                c_data = df_raw[client_id]
+                                st.write(f"**Records:** {len(c_data)}")
+                                st.write(f"**Avg Consumption:** {c_data.mean():.2f} kWh")
+
+                if st.button("Load to Profile Adjuster"):
+                                        # Take the most recent 24-hour window
+                                        recent = c_data.tail(24).tolist()
+                                        if len(recent) == 24:
+                                                                recent = c_data.tail(24).tolist()
+                                                                if len(recent) == 24:
+                                                                                            st.session_state.readings = recent
+                                                                                            st.rerun()
+
+                                                    with h_col2:
+                                                                    if df_raw is not None and st.session_state.current_client:
+                                                                                        st.subheader(f"Timeline Analysis: {st.session_state.current_client}")
+                                                                                        fig_time = px.line(df_raw[st.session_state.current_client].reset_index(), x='datetime', y=st.session_state.current_client)
+                                                                                        fig_time.update_layout(height=300, margin=dict(l=0, r=0, t=10, b=0))
+                                                                                        st.plotly_chart(fig_time, use_container_width=True)
+
+                                                                st.markdown("</div>", unsafe_allow_html=True)
+
+    # Footer
     st.markdown("---")
-    
-    st.markdown("### 📊 System Status")
-    if models_ready():
-        st.success("AI Core: Active")
-    else:
-        st.error("AI Core: Offline")
-        
+    f_col1, f_col2 = st.columns(2)
+    f_col1.markdown("<p style='color:#64748b; font-size:0.8rem;'>System V1.5.2 | Scaled Environment Ready</p>", unsafe_allow_html=True)
+    f_col2.markdown("<p style='color:#64748b; font-size:0.8rem; text-align:right;'>Powered by scikit-learn & streamlit</p>", unsafe_allow_html=True)
+
+if __name__ == "__main__":
+        main()
+
+                                                                    st.session_state.readings = recent
+                                                                    st.rerun()
+
+                            with h_col2:
+                                            if df_raw is not None and st.session_state.current_client:
+                                                                st.subheader(f"Timeline Analysis: {st.session_state.current_client}")
+                                                                fig_time = px.line(df_raw[st.session_state.current_client].reset_index(), x='datetime', y=st.session_state.current_client)
+                                                                fig_time.update_layout(height=300, margin=dict(l=0, r=0, t=10, b=0))
+                                                                st.plotly_chart(fig_time, use_container_width=True)
+
+                                        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Footer
     st.markdown("---")
-    st.markdown("### 🎯 Model Performance")
-    
-    metrics_path = os.path.join(MODEL_DIR, "metrics.json")
-    if os.path.exists(metrics_path):
-        import json
-        with open(metrics_path, "r") as f:
-            m = json.load(f).get("isolation_forest", {})
-            st.metric("Accuracy", f"{m.get('accuracy', 0)*100:.1f}%")
-            st.metric("Precision", f"{m.get('precision', 0)*100:.1f}%")
-            st.metric("Recall", f"{m.get('recall', 0)*100:.1f}%")
-    
-    st.markdown("---")
-    st.caption("Developed using Scikit-learn & Streamlit")
+    f_col1, f_col2 = st.columns(2)
+    f_col1.markdown("<p style='color:#64748b; font-size:0.8rem;'>System V1.5.2 | Scaled Environment Ready</p>", unsafe_allow_html=True)
+    f_col2.markdown("<p style='color:#64748b; font-size:0.8rem; text-align:right;'>Powered by scikit-learn & streamlit</p>", unsafe_allow_html=True)
 
-
-# ── Main Content ───────────────────────────────────────────────────────────────
-
-# Hero
-st.markdown("""
-<div class="hero-container">
-    <div class="hero-title">⚡ Smart Electricity Theft Detection</div>
-    <div class="hero-subtitle">Industrial-grade anomaly detection system powered by Isolation Forest.</div>
-</div>
-""", unsafe_allow_html=True)
-
-tab_dash, tab_detect, tab_analytics, tab_data = st.tabs([
-    "🏠 Dashboard", "🔍 Detect Fraud", "📊 Model Insights", "📁 Data Source"
-])
-
-
-# 🏠 DASHBOARD
-with tab_dash:
-    c1, c2, c3, c4 = st.columns(4)
-    with c1: st.markdown('<div class="metric-container"><div class="metric-val">3,742</div><div class="metric-lbl">Total Audits</div></div>', unsafe_allow_html=True)
-    with c2: st.markdown('<div class="metric-container"><div class="metric-val">5.2%</div><div class="metric-lbl">Fraud Rate</div></div>', unsafe_allow_html=True)
-    with c3: st.markdown('<div class="metric-container"><div class="metric-val">24h</div><div class="metric-lbl">Inference Window</div></div>', unsafe_allow_html=True)
-    with c4: st.markdown('<div class="metric-container"><div class="metric-val">99%</div><div class="metric-lbl">System Uptime</div></div>', unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    df = load_features_sample(10000)
-    if df is not None:
-        col_left, col_right = st.columns([2, 1])
-        
-        with col_left:
-            st.markdown("### 📈 Network Energy Baseline")
-            ts = df.groupby("datetime")["consumption"].mean().reset_index()
-            fig = px.line(ts, x="datetime", y="consumption", template="plotly_white")
-            fig.update_traces(line_color='#2563eb', fill='tozeroy', fillcolor='rgba(37,99,235,0.1)')
-            fig.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=350, xaxis_title="", yaxis_title="kWh")
-            st.plotly_chart(fig, use_container_width=True)
-            
-        with col_right:
-            st.markdown("### 🚨 Detection Mix")
-            fig2 = px.pie(values=[94.8, 5.2], names=["Healthy", "Anomalous"], 
-                          color_discrete_sequence=['#10b981', '#ef4444'], hole=.55)
-            fig2.update_layout(margin=dict(l=0,r=0,t=0,b=0), height=350, showlegend=False)
-            st.plotly_chart(fig2, use_container_width=True)
-
-
-# 🔍 DETECT FRAUD
-with tab_detect:
-    st.markdown("### 🔍 Live Anomaly Scanner")
-    st.markdown("Analyze consumption behavior over 24 hours to identify potential theft or tamupering.")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    with st.container(border=True):
-        st.markdown("**Load Profile Presets**")
-        p1, p2, p3, p4 = st.columns(4)
-        if p1.button("🟢 Normal Setup"):
-            st.session_state["p"] = [1.2,1.0,0.9,0.8,0.8,1.0,1.8,3.2,3.5,3.0,2.8,2.9,3.0,2.9,2.8,3.1,3.8,4.5,4.8,4.5,3.9,3.1,2.2,1.5]
-        if p2.button("🏭 Heavy Industry"):
-            st.session_state["p"] = [6.5,6.3,6.1,6.0,6.2,6.8,7.2,8.0,9.0,9.5,9.8,9.6,9.3,9.2,9.4,9.1,8.8,8.2,7.5,7.0,6.9,6.7,6.5,6.4]
-        if p3.button("🚨 Suspected Theft"):
-            st.session_state["p"] = [0.05]*24
-        if p4.button("🔄 Reset"):
-            st.session_state["p"] = [3.0]*24
-            
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # 24-hr Grid
-    readings = []
-    default = st.session_state.get("p", [3.0]*24)
-    
-    st.markdown("**24-Hour Consumption Profile (kWh)**")
-    row1 = st.columns(6)
-    row2 = st.columns(6)
-    row3 = st.columns(6)
-    row4 = st.columns(6)
-    all_cols = row1 + row2 + row3 + row4
-    
-    for h in range(24):
-        with all_cols[h]:
-            v = st.slider(f"{h:02d}:00", 0.0, 20.0, float(default[h]), 0.1, key=f"s_{h}")
-            readings.append(v)
-            
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    if st.button("⚡ EXECUTE AI DIAGNOSTICS"):
-        with st.spinner("Analyzing neural patterns..."):
-            time.sleep(1)
-            res = predict_single(readings)
-            
-        code = res["code"]
-        label = res["label"]
-        score = res["score"]
-        
-        if code == 0:
-            st.markdown(f"""
-            <div class="res-card res-normal">
-                <div class="res-title">✅ NORMAL USAGE</div>
-                <div class="res-desc">No suspicious patterns detected. Consumer behavior aligns with grid standards.</div>
-                <div class="res-score">Anomaly Score: {score:.3f}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        elif code == 2:
-            st.markdown(f"""
-            <div class="res-card res-unusual">
-                <div class="res-title">⚠️ SLIGHTLY UNUSUAL</div>
-                <div class="res-desc">Minor deviations detected. May indicate appliance malfunction or edge-case behavior.</div>
-                <div class="res-score">Anomaly Score: {score:.3f}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div class="res-card res-suspicious">
-                <div class="res-title">🚨 ALERT: SUSPICIOUS</div>
-                <div class="res-desc">Extreme anomaly detected. High probability of meter tampering or illegal connection.</div>
-                <div class="res-score">Anomaly Score: {score:.3f}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        # Visualization
-        st.markdown("### 📊 Profile Visualization")
-        h_labels = res["hour_labels"]
-        # Map colors
-        colors = ["#ef4444" if l=="Suspicious" else "#eab308" if l=="Slightly Unusual" else "#10b981" for l in h_labels]
-        
-        fig_res = go.Figure()
-        fig_res.add_trace(go.Bar(x=[f"{h:02d}h" for h in range(24)], y=readings, marker_color=colors))
-        fig_res.add_trace(go.Scatter(x=[f"{h:02d}h" for h in range(24)], y=readings, mode='lines+markers', line=dict(color='#1e293b', width=3)))
-        fig_res.update_layout(template="plotly_white", margin=dict(l=0,r=0,t=0,b=0), height=350, showlegend=False)
-        st.plotly_chart(fig_res, use_container_width=True)
-
-
-# 📊 ANALYTICS
-with tab_analytics:
-    st.markdown("### 🧬 AI Model Architecture & Insights")
-    
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.markdown('<div class="ui-card">', unsafe_allow_html=True)
-        st.markdown("**Anomaly Score Distribution**")
-        p_dist = os.path.join(SCREENSHOTS, "anomaly_score_distribution.png")
-        if os.path.exists(p_dist):
-            st.image(p_dist, use_column_width=True)
-        else:
-            st.info("Score distribution plot pending.")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-    with col_b:
-        st.markdown('<div class="ui-card">', unsafe_allow_html=True)
-        st.markdown("**Global Feature Importance**")
-        p_feat = os.path.join(SCREENSHOTS, "feature_importance.png")
-        if os.path.exists(p_feat):
-            st.image(p_feat, use_column_width=True)
-        else:
-            st.info("Feature importance plot pending.")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-
-# 📁 DATA SOURCE
-with tab_data:
-    st.markdown("### 📁 Dataset Intelligence")
-    st.markdown("Below is a sample of the processed features used for training and inference.")
-    
-    df_samp = load_features_sample(500)
-    if df_samp is not None:
-        st.dataframe(df_samp, use_container_width=True)
-    else:
-        st.info("Dataset CSV not found.")
-        
-    st.markdown("---")
-    st.markdown("**Technical Specs**")
-    st.markdown("- **Framework:** Python 3.11 / Streamlit")
-    st.markdown("- **Engine:** Scikit-Learn (Isolation Forest)")
-    st.markdown("- **Visualization:** Plotly Graphic Objects")
-
-st.markdown("""
-<div style="text-align:center; padding: 40px 0; color: #94a3b8; font-size: 0.9rem;">
-    Powered by VoltGuard AI Engine | Developed for Grid Security<br>
-    © 2024 Electricity Theft Detection Project
-</div>
-""", unsafe_allow_html=True)
+if __name__ == "__main__":
+        main()
