@@ -55,48 +55,48 @@ border-right: 1px solid #e2e8f0;
 .ui-card {
 background: white;
 padding: 24px;
-    border-radius: 16px;
-        border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-                margin-bottom: 20px;
-                }
+border-radius: 16px;
+border: 1px solid #e2e8f0;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    }
 
-                /* Sidebar Buttons */
-                .stButton>button {
-                    width: 100%;
-                        border-radius: 8px;
-                            height: 3em;
-                                background-color: #ffffff;
-                                    color: #1e293b;
-                                        border: 1px solid #e2e8f0;
-                                            font-weight: 600;
-                                            }
+    /* Sidebar Buttons */
+    .stButton>button {
+        width: 100%;
+            border-radius: 8px;
+                height: 3em;
+                    background-color: #ffffff;
+                        color: #1e293b;
+                            border: 1px solid #e2e8f0;
+                                font-weight: 600;
+                                }
 
-                                            .stButton>button:hover {
-                                                border-color: #3b82f6;
-                                                    color: #3b82f6;
-                                                    }
+                                .stButton>button:hover {
+                                    border-color: #3b82f6;
+                                        color: #3b82f6;
+                                        }
 
-                                                    /* Metric Colors */
-                                                    [data-testid="stMetricValue"] {
-                                                        font-size: 1.8rem !important;
-                                                            font-weight: 800 !important;
-                                                            }
+                                        /* Metric Colors */
+                                        [data-testid="stMetricValue"] {
+                                            font-size: 1.8rem !important;
+                                                font-weight: 800 !important;
+                                                }
 
-                                                            /* Header indicator */
-                                                            .main .block-container::before {
-                                                                content: "Professional Grid Analysis";
-                                                                    position: absolute;
-                                                                        top: -40px;
-                                                                            left: 0;
-                                                                                font-size: 0.8rem;
-                                                                                    font-weight: 600;
-                                                                                        text-transform: uppercase;
-                                                                                            letter-spacing: 0.1em;
-                                                                                                color: #64748b;
-                                                                                                }
-                                                                                                </style>
-                                                                                                """, unsafe_allow_html=True)
+                                                /* Header indicator */
+                                                .main .block-container::before {
+                                                    content: "Professional Grid Analysis";
+                                                        position: absolute;
+                                                            top: -40px;
+                                                                left: 0;
+                                                                    font-size: 0.8rem;
+                                                                        font-weight: 600;
+                                                                            text-transform: uppercase;
+                                                                                letter-spacing: 0.1em;
+                                                                                    color: #64748b;
+                                                                                    }
+                                                                                    </style>
+                                                                                    """, unsafe_allow_html=True)
 
 
 # -- State management & Helpers -------------------------------------------------
@@ -112,7 +112,7 @@ if "readings" not in st.session_state:
 # Default: some realistic values
 st.session_state.readings = [
 1.2, 1.0, 0.9, 0.8, 0.8, 1.0, 1.8, 3.2, 3.5, 3.0, 2.8, 2.9,
-    3.0, 2.9, 2.8, 3.1, 3.8, 4.5, 4.8, 4.5, 3.9, 3.1, 2.2, 1.5
+3.0, 2.9, 2.8, 3.1, 3.8, 4.5, 4.8, 4.5, 3.9, 3.1, 2.2, 1.5
 ]
 
 def load_system_data():
@@ -263,13 +263,13 @@ with st.expander("Expand Hourly Editor", expanded=True):
 
 new_readings = []
 for h in range(24):
-            val = st.number_input(f"{h:02d}:00", value=float(st.session_state.readings[h]), step=0.1, format="%.1f", key=f"h_input_{h}")
-            new_readings.append(val)
+val = st.number_input(f"{h:02d}:00", value=float(st.session_state.readings[h]), step=0.1, format="%.1f", key=f"h_input_{h}")
+new_readings.append(val)
 
 if new_readings != st.session_state.readings:
-            st.session_state.readings = new_readings
-            st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+st.session_state.readings = new_readings
+st.rerun()
+st.markdown("</div>", unsafe_allow_html=True)
 
 
 # Third Row: Historical Discovery
@@ -280,11 +280,11 @@ st.info("TIP: Connect a historical dataset to enable deep-dive analysis of indiv
 # Offer to generate fallback data in UI
 if st.button("Generate Intelligence Fallback"):
 with st.spinner("Generating synthetic profiles..."):
-            from fallback import generate_fallback_data
-            generate_fallback_data()
-            st.success("Synthetic logic activated. Rerunning...")
-            time.sleep(1)
-            st.rerun()
+from fallback import generate_fallback_data
+generate_fallback_data()
+st.success("Synthetic logic activated. Rerunning...")
+time.sleep(1)
+st.rerun()
 else:
 # Data discovery interface
 st.markdown("<div class='ui-card'>", unsafe_allow_html=True)
@@ -305,22 +305,22 @@ st.write(f"**Records:** {len(c_data)}")
 st.write(f"**Avg Consumption:** {c_data.mean():.2f} kWh")
 
 if st.button("Load to Profile Adjuster"):
-        # Take the most recent 24-hour window
-        recent = c_data.tail(24).tolist()
-        if len(recent) == 24:
-                                recent = c_data.tail(24).tolist()
-                                if len(recent) == 24:
-                                                            st.session_state.readings = recent
-                                                            st.rerun()
+# Take the most recent 24-hour window
+recent = c_data.tail(24).tolist()
+if len(recent) == 24:
+                    recent = c_data.tail(24).tolist()
+                    if len(recent) == 24:
+                                                st.session_state.readings = recent
+                                                st.rerun()
 
-                    with h_col2:
-                                    if df_raw is not None and st.session_state.current_client:
-                                                        st.subheader(f"Timeline Analysis: {st.session_state.current_client}")
-                                                        fig_time = px.line(df_raw[st.session_state.current_client].reset_index(), x='datetime', y=st.session_state.current_client)
-                                                        fig_time.update_layout(height=300, margin=dict(l=0, r=0, t=10, b=0))
-                                                        st.plotly_chart(fig_time, use_container_width=True)
+        with h_col2:
+                        if df_raw is not None and st.session_state.current_client:
+                                            st.subheader(f"Timeline Analysis: {st.session_state.current_client}")
+                                            fig_time = px.line(df_raw[st.session_state.current_client].reset_index(), x='datetime', y=st.session_state.current_client)
+                                            fig_time.update_layout(height=300, margin=dict(l=0, r=0, t=10, b=0))
+                                            st.plotly_chart(fig_time, use_container_width=True)
 
-                                st.markdown("</div>", unsafe_allow_html=True)
+                    st.markdown("</div>", unsafe_allow_html=True)
 
 # Footer
 st.markdown("---")
@@ -331,17 +331,17 @@ f_col2.markdown("<p style='color:#64748b; font-size:0.8rem; text-align:right;'>P
 if __name__ == "__main__":
 main()
 
-                                    st.session_state.readings = recent
-                                    st.rerun()
+                        st.session_state.readings = recent
+                        st.rerun()
 
 with h_col2:
-            if df_raw is not None and st.session_state.current_client:
-                                st.subheader(f"Timeline Analysis: {st.session_state.current_client}")
-                                fig_time = px.line(df_raw[st.session_state.current_client].reset_index(), x='datetime', y=st.session_state.current_client)
-                                fig_time.update_layout(height=300, margin=dict(l=0, r=0, t=10, b=0))
-                                st.plotly_chart(fig_time, use_container_width=True)
+if df_raw is not None and st.session_state.current_client:
+                    st.subheader(f"Timeline Analysis: {st.session_state.current_client}")
+                    fig_time = px.line(df_raw[st.session_state.current_client].reset_index(), x='datetime', y=st.session_state.current_client)
+                    fig_time.update_layout(height=300, margin=dict(l=0, r=0, t=10, b=0))
+                    st.plotly_chart(fig_time, use_container_width=True)
 
-        st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
 # Footer
 st.markdown("---")
