@@ -22,50 +22,43 @@ from sklearn.preprocessing import StandardScaler
 import joblib
 from tqdm import tqdm
 
-# == Paths ==
-BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATASET_DIR = os.path.join(BASE_DIR, "dataset")
-MODEL_DIR   = os.path.join(BASE_DIR, "model")
-
-RAW_ZIP  = os.path.join(DATASET_DIR, "LD2011_2014.txt.zip")
-RAW_TXT  = os.path.join(DATASET_DIR, "LD2011_2014.txt")
-PROC_CSV = os.path.join(DATASET_DIR, "processed_hourly.csv")
-SCALER_PATH = os.path.join(MODEL_DIR, "scaler.pkl")
+import paths
 
 UCI_URL = (
       "https://archive.ics.uci.edu/static/public/321/electricityloaddiagrams20112014.zip"
 )
 
-# == Download helpers ==
+# -- Download helpers ---------------------------------------------------------
 
 def download_dataset():
       """Download and unzip the UCI dataset if it does not already exist."""
-      os.makedirs(DATASET_DIR, exist_ok=True)
-      os.makedirs(MODEL_DIR, exist_ok=True)
+      paths.DATASET_DIR.mkdir(parents=True, exist_ok=True)
+      paths.MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
-    if os.path.exists(RAW_TXT):
-              print(f"[INFO] Raw dataset already exists: {RAW_TXT}")
+    if paths.RAW_TXT.exists():
+              print(f"[INFO] Raw dataset already exists: {paths.RAW_TXT}")
               return
 
-    if not os.path.exists(RAW_ZIP):
+    if not paths.RAW_ZIP.exists():
               print(f"[INFO] Downloading dataset from UCI ...")
               response = requests.get(UCI_URL, stream=True, timeout=120)
               total = int(response.headers.get("content-length", 0))
-              with open(RAW_ZIP, "wb") as f, tqdm(
+              with open(paths.RAW_ZIP, "wb") as f, tqdm(
                             desc="Downloading", total=total, unit="B", unit_scale=True
               ) as bar:
                             for chunk in response.iter_content(chunk_size=8192):
                                               f.write(chunk)
                                               bar.update(len(chunk))
-                                      print(f"[INFO] Download complete -> {RAW_ZIP}")
-
-          print(f"[INFO] Extracting zip ...")
-    with zipfile.ZipFile(RAW_ZIP, "r") as z:
-              z.extractall(DATASET_DIR)
-          print(f"[INFO] Extracted to {DATASET_DIR}")
+                                      print(f"[INFO] Download complete -> {paths.RAW_ZIP}")
 
 
-# == Loading ==
+    print(f"[INFO] Extracting zip ...")
+    with zipfile.ZipFile(paths.RAW_ZIP, "r") as z:
+              z.extractall(paths.DATASET_DIR)
+          print(f"[INFO] Extracted to {paths.DATASET_DIR}")
+
+
+# -- Loading ------------------------------------------------------------------
 
 def load_raw(nrows: int | None = None) -> pd.DataFrame:
       """
@@ -82,7 +75,7 @@ def load_raw(nrows: int | None = None) -> pd.DataFrame:
                                               """
       print(f"[INFO] Loading raw data (nrows={nrows}) ...")
       df = pd.read_csv(
-          RAW_TXT,
+          paths.RAW_TXT,
           sep=";",
           decimal=",",        # European locale: comma as decimal separator
           index_col=0,
@@ -98,8 +91,7 @@ def load_raw(nrows: int | None = None) -> pd.DataFrame:
       return df
 
 
-
-# == Resampling ==
+# -- Resampling ----------------------------------------------------------------
 
 def resample_hourly(df: pd.DataFrame) -> pd.DataFrame:
       """Resample 15-minute data to hourly sums (kWh)."""
@@ -108,7 +100,7 @@ def resample_hourly(df: pd.DataFrame) -> pd.DataFrame:
       return df_hourly
 
 
-# == Missing value handling ==
+# -- Missing value handling ----------------------------------------------------
 
 def handle_missing(df: pd.DataFrame) -> pd.DataFrame:
       """Forward-fill then backward-fill residual NaNs; drop all-NaN columns."""
@@ -118,10 +110,11 @@ def handle_missing(df: pd.DataFrame) -> pd.DataFrame:
       print(f"[INFO] Missing values: {before} -> {after} (after ffill/bfill)")
       # Drop clients that are still entirely NaN
       df.dropna(axis=1, how="all", inplace=True)
-    return df
+      return df
 
 
-# == Normalisation ==
+
+# -- Normalisation -------------------------------------------------------------
 
 def scale_data(df: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
       """
@@ -135,18 +128,18 @@ def scale_data(df: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
       if fit:
                 scaler = StandardScaler()
                 scaled = scaler.fit_transform(df)
-                joblib.dump(scaler, SCALER_PATH)
-                print(f"[INFO] Scaler fitted and saved -> {SCALER_PATH}")
+                joblib.dump(scaler, paths.SCALER_PATH)
+                print(f"[INFO] Scaler fitted and saved -> {paths.SCALER_PATH}")
 else:
-        scaler = joblib.load(SCALER_PATH)
+        scaler = joblib.load(paths.SCALER_PATH)
           scaled = scaler.transform(df)
-        print(f"[INFO] Scaler loaded from {SCALER_PATH}")
+        print(f"[INFO] Scaler loaded from {paths.SCALER_PATH}")
 
     df_scaled = pd.DataFrame(scaled, index=df.index, columns=df.columns)
     return df_scaled
 
 
-# == Main pipeline ==
+# -- Main pipeline -------------------------------------------------------------
 
 def run_preprocessing(nrows: int | None = None, force: bool = False) -> pd.DataFrame:
       """
@@ -156,9 +149,9 @@ def run_preprocessing(nrows: int | None = None, force: bool = False) -> pd.DataF
                   -------
                       Hourly, cleaned, scaled DataFrame saved as processed_hourly.csv.
                           """
-    if os.path.exists(PROC_CSV) and not force:
-              print(f"[INFO] Processed file already exists, loading -> {PROC_CSV}")
-              df = pd.read_csv(PROC_CSV, index_col=0, parse_dates=True)
+    if paths.PROC_CSV.exists() and not force:
+              print(f"[INFO] Processed file already exists, loading -> {paths.PROC_CSV}")
+              df = pd.read_csv(paths.PROC_CSV, index_col=0, parse_dates=True)
               return df
 
     download_dataset()
@@ -166,8 +159,8 @@ def run_preprocessing(nrows: int | None = None, force: bool = False) -> pd.DataF
     df = resample_hourly(df)
     df = handle_missing(df)
     df_scaled = scale_data(df, fit=True)
-    df_scaled.to_csv(PROC_CSV)
-    print(f"[INFO] Processed data saved -> {PROC_CSV}  shape={df_scaled.shape}")
+    df_scaled.to_csv(paths.PROC_CSV)
+    print(f"[INFO] Processed data saved -> {paths.PROC_CSV}  shape={df_scaled.shape}")
     return df_scaled
 
 
