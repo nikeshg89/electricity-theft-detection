@@ -58,7 +58,7 @@ def load_models():
       _models["isolation_forest"] = joblib.load(IF_PATH)
       if os.path.exists(RF_PATH):
                 _models["random_forest"] = joblib.load(RF_PATH)
-            if os.path.exists(SCALER_PATH):
+                if os.path.exists(SCALER_PATH):
                       _scaler = joblib.load(SCALER_PATH)
 
     if os.path.exists(THRESHOLD_PATH):
