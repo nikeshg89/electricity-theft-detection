@@ -16,14 +16,8 @@ Features computed PER CLIENT:
                 The output is a flat feature matrix used by all ML models.
                 """
 
-import os
-import numpy as np
-import pandas as pd
-
-BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATASET_DIR = os.path.join(BASE_DIR, "dataset")
-FEAT_CSV    = os.path.join(DATASET_DIR, "features.csv")
-
+import paths
+import pandas as pd # MISSING IMPORT ADDED
 
 def extract_time_features(df: pd.DataFrame) -> pd.DataFrame:
       """Add calendar features shared across all clients."""
@@ -107,14 +101,14 @@ def build_feature_matrix(
     return feature_df
 
 
-def save_features(feature_df: pd.DataFrame):
-      feature_df.to_csv(FEAT_CSV, index=False)
-    print(f"[INFO] Features saved -> {FEAT_CSV}")
+def save_features(feature_df: pd.DataFrame): # MISSING FUNCTION ADDED
+      feature_df.to_csv(paths.FEAT_CSV, index=False)
+    print(f"[INFO] Features saved -> {paths.FEAT_CSV}")
 
 
 def load_features() -> pd.DataFrame:
-      df = pd.read_csv(FEAT_CSV, parse_dates=["datetime"])
-    print(f"[INFO] Features loaded from {FEAT_CSV}  shape={df.shape}")
+      df = pd.read_csv(paths.FEAT_CSV, parse_dates=["datetime"])
+    print(f"[INFO] Features loaded from {paths.FEAT_CSV}  shape={df.shape}")
     return df
 
 
