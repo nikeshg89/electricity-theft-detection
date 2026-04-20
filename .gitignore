@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Streamlit
+.streamlit/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project Specific
+dataset/features.csv
+dataset/sample_data.csv
+screenshots/*.png
+!screenshots/cm_isolation_forest.png
+!screenshots/cm_random_forest.png
+!screenshots/feature_importance.png
+!screenshots/anomaly_score_distribution.png
+!screenshots/timeseries_anomalies.png
+!screenshots/distribution_normal_vs_suspicious.png
